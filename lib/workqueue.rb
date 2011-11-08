@@ -53,7 +53,7 @@ class WorkQueue
   end
 
   def abort!
-    @aborted = true
+    @mutex.synchronize { @aborted = true }
   end
 
   def run
@@ -76,7 +76,8 @@ class WorkQueue
   end
 
   def join
-    @joined = true
+    @mutex.synchronize { @joined = true }
+
     workers.each(&:join)
 
     self
