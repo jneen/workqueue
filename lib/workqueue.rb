@@ -4,15 +4,11 @@ class WorkQueue
   class ThreadsafeCounter
     def initialize(count=0)
       @count = count
+      @mutex = Mutex.new
     end
 
     def incr(by=1)
-      mutex.synchronize { @count += by }
-    end
-
-  private
-    def mutex
-      @mutex ||= Mutex.new
+      @mutex.synchronize { @count += by }
     end
   end
 
@@ -21,6 +17,7 @@ class WorkQueue
   def initialize(init_queue=[], opts={}, &job)
     @job = job
     @queue = Queue.new
+    @mutex = Mutex.new
 
     opts.each { |k, v| send(:"#{k}=", v) }
 
@@ -32,20 +29,31 @@ class WorkQueue
     @size ||= 2
   end
 
-  def workers
-    @workers ||= []
-  end
-
   def work!
-    until @aborted or (@joined and queue.empty?)
+    loop do
       begin
-        payload, index = queue.shift
+        # initialize these here so they can be set in
+        # the synchronize block
+        payload, index = []
+
+        @mutex.synchronize {
+          unless @aborted or (@joined and queue.empty?)
+            payload, index = queue.shift
+          end
+        }
+
+        break if payload.nil?
+
         aggregate[index] = job.call(payload)
       rescue Exception
-        @aborted = true
+        abort!
         raise
       end
     end
+  end
+
+  def abort!
+    @aborted = true
   end
 
   def run
@@ -57,7 +65,7 @@ class WorkQueue
   end
 
   def push(e)
-    @queue.push([e, cursor.incr])
+    queue.push([e, cursor.incr])
 
     self
   end
@@ -86,5 +94,9 @@ private
 
   def cursor
     @cursor ||= ThreadsafeCounter.new(-1)
+  end
+
+  def workers
+    @workers ||= []
   end
 end
