@@ -1,5 +1,8 @@
 describe WorkQueue do
-  let(:mutex) { Mutex.new }
+  before do
+    # a helper mutex
+    @mutex = Mutex.new
+  end
 
   it 'preserves order of results' do
     queue = WorkQueue.new([1,2,3]) do |x|
@@ -15,7 +18,7 @@ describe WorkQueue do
     aggregator = []
 
     queue = WorkQueue.new([1,2,3]) do |x|
-      mutex.synchronize { aggregator << x + 1 }
+      @mutex.synchronize { aggregator << x + 1 }
     end
 
     aggregator << 0
