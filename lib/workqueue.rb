@@ -49,7 +49,7 @@ class WorkQueue
   end
 
   def run
-    @workers ||= (1..size).map do
+    @workers = (1..size).map do
       Thread.new { work! }
     end
 
