@@ -32,11 +32,9 @@ class WorkQueue
   def work!
     loop do
       begin
-        unless @aborted
-          payload, index = queue.shift
-        end
-
-        break if payload.nil?
+        break if @aborted
+        payload, index = queue.shift
+        break if payload == :__break!
 
         aggregate[index] = job.call(payload)
       rescue Exception
@@ -70,7 +68,7 @@ class WorkQueue
   end
 
   def join
-    concat([nil] * size)
+    concat([:__break!] * size)
 
     workers.each(&:join)
 
