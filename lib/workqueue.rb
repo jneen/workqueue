@@ -17,7 +17,6 @@ class WorkQueue
   def initialize(init_queue=[], opts={}, &job)
     @job = job
     @queue = Queue.new
-    @mutex = Mutex.new
 
     opts.each { |k, v| send(:"#{k}=", v) }
 
@@ -45,7 +44,7 @@ class WorkQueue
   end
 
   def abort!
-    @mutex.synchronize { @aborted = true }
+    @aborted = true
   end
 
   def run
