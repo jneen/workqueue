@@ -32,15 +32,9 @@ class WorkQueue
   def work!
     loop do
       begin
-        # initialize these here so they can be set in
-        # the synchronize block
-        payload, index = []
-
-        @mutex.synchronize {
-          unless @aborted or (@joined and queue.empty?)
-            payload, index = queue.shift
-          end
-        }
+        unless @aborted
+          payload, index = queue.shift
+        end
 
         break if payload.nil?
 
@@ -76,7 +70,7 @@ class WorkQueue
   end
 
   def join
-    @mutex.synchronize { @joined = true }
+    concat([nil] * size)
 
     workers.each(&:join)
 
