@@ -36,4 +36,19 @@ describe WorkQueue do
 
     assert { aggregator == [0, 2, 3, 4] }
   end
+
+  it %[bubbles up exceptions] do
+    queue = WorkQueue.new([1,2,3]) do |x|
+      raise "got an even number" if x.even?
+    end.run
+
+    # let the threads run
+    sleep 0.5
+
+    ex = rescuing { queue.join }
+
+    assert { ex }
+    assert { ex.message == "got an even number" }
+    assert { ex.backtrace.grep(/work!/).any? }
+  end
 end

@@ -36,9 +36,9 @@ class WorkQueue
         break if payload == :__break!
 
         aggregate[index] = job.call(payload)
-      rescue Exception
+      rescue Exception => e
+        Thread.current[:exception] = e
         abort!
-        raise
       end
     end
   end
@@ -70,6 +70,9 @@ class WorkQueue
     concat([:__break!] * size)
 
     workers.each(&:join)
+
+    exception = workers.map { |w| w[:exception] }.compact.first
+    raise exception if exception
 
     self
   end
