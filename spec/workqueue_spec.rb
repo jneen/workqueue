@@ -34,7 +34,7 @@ describe WorkQueue do
     # (calling #results also does this)
     queue.join
 
-    assert { aggregator == [0, 2, 3, 4] }
+    assert { aggregator.sort == [0, 2, 3, 4] }
   end
 
   it %[bubbles up exceptions] do
