@@ -14,9 +14,13 @@ class WorkQueue
 
   attr_reader :queue
   attr_reader :job
+  attr_reader :aggregate
+  attr_reader :cursor
   def initialize(init_queue=[], opts={}, &job)
     @job = job
     @queue = Queue.new
+    @aggregate = []
+    @cursor = ThreadsafeCounter.new(-1)
 
     opts.each { |k, v| send(:"#{k}=", v) }
 
@@ -83,14 +87,6 @@ class WorkQueue
   end
 
 private
-  def aggregate
-    @aggregator ||= []
-  end
-
-  def cursor
-    @cursor ||= ThreadsafeCounter.new(-1)
-  end
-
   def workers
     @workers ||= []
   end
