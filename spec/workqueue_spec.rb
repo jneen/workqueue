@@ -42,9 +42,6 @@ describe WorkQueue do
       raise "got an even number" if x.even?
     end.run
 
-    # let the threads run
-    sleep 0.5
-
     ex = rescuing { queue.join }
 
     assert { ex }
