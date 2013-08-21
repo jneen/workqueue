@@ -39,7 +39,7 @@ class WorkQueue
         payload, index = queue.shift
         break if payload == :__break!
 
-        aggregate[index] = job.call(payload)
+        aggregate[index] = job.call(payload, index)
       rescue Exception => e
         Thread.current[:exception] = e
         abort!
