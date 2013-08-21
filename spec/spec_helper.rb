@@ -5,10 +5,11 @@ Bundler.require
 require 'workqueue'
 require 'minitest/autorun'
 require 'minitest/spec'
+require 'wrong/adapters/minitest'
 
 Wrong.config[:color] = true
 
-class MiniTest::Unit::TestCase
+class Minitest::Test
   include Wrong
 end
 
