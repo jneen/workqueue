@@ -1,4 +1,5 @@
 describe WorkQueue do
+
   before do
     # a helper mutex
     @mutex = Mutex.new
@@ -12,6 +13,16 @@ describe WorkQueue do
     end.run
 
     assert { queue.results == [2, 3, 4] }
+  end
+
+  it 'passes the index into the block' do
+    queue = WorkQueue.new([1,2,3]) do |x, i|
+      # the sleep ensures they actually run in opposite order
+      sleep(0.5 - 0.1*x)
+      x + i
+    end.run
+
+    assert { queue.results == [1, 3, 5] }
   end
 
   it %[doesn't do anything unless #run is called] do
