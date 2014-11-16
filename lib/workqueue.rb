@@ -16,11 +16,13 @@ class WorkQueue
   attr_reader :job
   attr_reader :aggregate
   attr_reader :cursor
+  attr_reader :workers
   def initialize(init_queue=[], opts={}, &job)
     @job = job
     @queue = Queue.new
     @aggregate = []
     @cursor = ThreadsafeCounter.new(-1)
+    @aggregate_mutex = Mutex.new
 
     opts.each { |k, v| send(:"#{k}=", v) }
 
@@ -36,10 +38,13 @@ class WorkQueue
     loop do
       begin
         break if @aborted
-        payload, index = queue.shift
+        payload = queue.shift
         break if payload == :__break!
 
-        aggregate[index] = job.call(payload, index)
+        el, index = payload
+        result = job.call(el, index)
+
+        @aggregate_mutex.synchronize { aggregate[index] = result }
       rescue Exception => e
         Thread.current[:exception] = e
         abort!
@@ -84,10 +89,5 @@ class WorkQueue
   def results
     join
     aggregate
-  end
-
-private
-  def workers
-    @workers ||= []
   end
 end
